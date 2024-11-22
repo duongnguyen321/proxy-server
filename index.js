@@ -10,7 +10,6 @@ const reqValidate = require('./module/reqValidate')
 global.browserLength = 0
 global.browserLimit = Number(process.env.BROWSER_LIMIT) || 20
 global.timeOut = Number(process.env.TIME_OUT || 60000)
-global.cache = new Map();
 
 app.use(bodyParser.json({}))
 app.use(bodyParser.urlencoded({extended: true}))
