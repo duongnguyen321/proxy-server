@@ -7,7 +7,13 @@ function getSource({url, proxy}) {
         if (!url) return reject('Missing url parameter');
 
         console.log(chalk.blue(`Initializing browser context ${url}`));
-        const context = await global.browser.createBrowserContext().catch(() => null);
+        let context;
+        try {
+            context = await global.browser.createBrowserContext();
+        } catch (e) {
+            return reject(chalk.red(`Failed to create browser context ${url}`));
+        }
+
         if (!context) return reject(chalk.red(`Failed to create browser context ${url}`));
 
         let isResolved = false;
@@ -62,7 +68,7 @@ function getSource({url, proxy}) {
             console.log(chalk.green(`Navigating to URL ${url}`));
             await page.goto(url, {waitUntil: 'networkidle2', timeout});
             console.log(chalk.green(`Waiting for network to be idle ${url}`));
-            await page.waitForNetworkIdle({idleTime: timeout, timeout}); // Adjust idleTime and timeout as needed
+            await page.waitForNetworkIdle({idleTime: 10000, timeout}); // Adjust idleTime and timeout as needed
 
             console.log(chalk.green(`Extracting page content ${url}`));
             const html = await page.content();
