@@ -31,7 +31,7 @@ function getSource({ url, proxy }) {
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
                 // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                if (['image', 'stylesheet', 'font', 'media', 'other'].includes(requestType)) {
+                if (['image', 'stylesheet', 'font', 'media'].includes(requestType)) {
                     request.abort(); // Abort these requests to save time
                     return; // Skip logging and proxying unnecessary requests
                 }
