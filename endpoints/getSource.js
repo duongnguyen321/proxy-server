@@ -1,23 +1,29 @@
-const chalk = require('chalk');
+const chalk = require("chalk");
 
-function getSource({url, proxy}) {
+function getSource({ url, proxy }) {
     return new Promise(async (resolve, reject) => {
-        if (!url) return reject('Missing url parameter');
+        if (!url) {
+            console.log(chalk.red('Missing url parameter'));
+            return reject('Missing url parameter');
+        }
 
         console.log(chalk.blue('Initializing browser context...'));
         const context = await global.browser.createBrowserContext().catch(() => null);
-        if (!context) return reject(chalk.red('Failed to create browser context'));
+        if (!context) {
+            console.log(chalk.red('Failed to create browser context'));
+            return reject('Failed to create browser context');
+        }
 
         let isResolved = false;
 
-        const {proxyRequest} = await import('puppeteer-proxy');
+        const { proxyRequest } = await import('puppeteer-proxy');
 
         const timeout = global.timeOut || 60000;
         const timeoutHandle = setTimeout(async () => {
             if (!isResolved) {
-                console.log(chalk.yellow('Request timeout reached, closing context...'));
+                console.log(chalk.yellow('Timeout reached, closing context...'));
                 await context.close();
-                reject(chalk.red('Timeout Error'));
+                reject("Timeout Error");
             }
         }, timeout);
 
@@ -28,42 +34,39 @@ function getSource({url, proxy}) {
 
             // Proxy interception logic
             page.on('request', async (request) => {
-                // const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
                 // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                // if (['image', 'stylesheet', 'font', 'media'].includes(requestType)) {
-                //     request.abort(); // Abort these requests to save time
-                //     return; // Skip logging and proxying unnecessary requests
-                // }
+                if (['image', 'stylesheet', 'font', 'media', 'other'].includes(requestType)) {
+                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
+                    request.abort(); // Abort these requests to save time
+                    return; // Skip logging and proxying unnecessary requests
+                }
 
-                // Log and proxy only essential requests (e.g., documents, AJAX, scripts)
-                if (proxy) {
+                try {
                     console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
-                    // console.log(chalk.magenta(`Type: ${requestType}`));
-                    // console.log(chalk.magenta(`Method: ${request.method()}`));
-                    try {
+                    if (proxy) {
+                        console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
                             request,
                         });
-                    } catch (e) {
-                        console.log(chalk.red('Proxy request failed, aborting...'));
-                        request.abort();
+                    } else {
+                        console.log(chalk.green('Request not proxied, continuing...'));
+                        request.continue();
                     }
-                } else {
-                    // If it's not an essential request, just continue without logging
-                    request.continue();
+                } catch (e) {
+                    console.log(chalk.red('Error with proxy request, aborting...'));
+                    request.abort();
                 }
             });
 
+            // Handle navigation and waiting for network idle
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, {waitUntil: 'networkidle2'}); // Wait for the page to fully load
-
-            // Wait for any loading overlay to disappear (indicating page content is ready)
-
+            await page.goto(url, { waitUntil: 'networkidle2' });
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({idleTime: 1000, timeout: 30000}); // Wait for all network activity to settle
+            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 });
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
