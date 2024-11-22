@@ -28,6 +28,7 @@ const getSource = require('./endpoints/getSource')
 const solveTurnstileMin = require('./endpoints/solveTurnstile.min')
 const solveTurnstileMax = require('./endpoints/solveTurnstile.max')
 const wafSession = require('./endpoints/wafSession')
+const chalk = require("chalk");
 
 app.post(pathParam, async (req, res) => {
     const data = req.body
@@ -54,34 +55,42 @@ app.post(pathParam, async (req, res) => {
     global.browserLength++
 
     switch (data.mode) {
-        case "source":
+        case "source": {
+            console.info(chalk.green(`Call ${data.url} by mode ${data.mode}`))
             result = await getSource(data).then(res => {
                 return {source: res, code: 200}
             }).catch(err => {
                 return {code: 500, message: err.message}
             })
             break;
-        case "turnstile-min":
+        }
+        case "turnstile-min": {
+            console.info(chalk.green(`Call ${data.url} by mode ${data.mode}`))
             result = await solveTurnstileMin(data).then(res => {
                 return {token: res, code: 200}
             }).catch(err => {
                 return {code: 500, message: err.message}
             })
             break;
-        case "turnstile-max":
+        }
+        case "turnstile-max": {
+            console.info(chalk.green(`Call ${data.url} by mode ${data.mode}`))
             result = await solveTurnstileMax(data).then(res => {
                 return {token: res, code: 200}
             }).catch(err => {
                 return {code: 500, message: err.message}
             })
             break;
-        case "waf-session":
+        }
+        case "waf-session": {
+            console.info(chalk.green(`Call ${data.url} by mode ${data.mode}`))
             result = await wafSession(data).then(res => {
                 return {...res, code: 200}
             }).catch(err => {
                 return {code: 500, message: err.message}
             })
             break;
+        }
     }
 
     global.browserLength--
