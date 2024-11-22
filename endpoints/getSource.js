@@ -63,7 +63,7 @@ function getSource({url, proxy}) {
             console.log(chalk.green('Navigating to URL...'));
             await page.goto(url, {waitUntil: 'networkidle2', timeout});
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({idleTime: 120000, timeout}); // Adjust idleTime and timeout as needed
+            await page.waitForNetworkIdle({idleTime: 1000, timeout}); // Adjust idleTime and timeout as needed
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
