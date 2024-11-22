@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 
-function getSource({ url, proxy }) {
+function getSource({url, proxy}) {
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
 
@@ -10,7 +10,7 @@ function getSource({ url, proxy }) {
 
         let isResolved = false;
 
-        const { proxyRequest } = await import('puppeteer-proxy');
+        const {proxyRequest} = await import('puppeteer-proxy');
 
         const timeout = global.timeOut || 60000;
         const timeoutHandle = setTimeout(async () => {
@@ -37,11 +37,10 @@ function getSource({ url, proxy }) {
                 }
 
                 // Log and proxy only essential requests (e.g., documents, AJAX, scripts)
-                if (proxy && (requestType === 'document' || requestType === 'xhr' || requestType === 'script')) {
+                if (proxy) {
                     console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
                     // console.log(chalk.magenta(`Type: ${requestType}`));
                     // console.log(chalk.magenta(`Method: ${request.method()}`));
-
                     try {
                         await proxyRequest({
                             page,
@@ -59,12 +58,12 @@ function getSource({ url, proxy }) {
             });
 
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, { waitUntil: 'load' }); // Wait for the page to fully load
+            await page.goto(url, {waitUntil: 'networkidle2'}); // Wait for the page to fully load
 
             // Wait for any loading overlay to disappear (indicating page content is ready)
 
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Wait for all network activity to settle
+            await page.waitForNetworkIdle({idleTime: 1000, timeout: 30000}); // Wait for all network activity to settle
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
