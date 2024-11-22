@@ -28,13 +28,13 @@ function getSource({url, proxy}) {
 
             // Proxy interception logic
             page.on('request', async (request) => {
-                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+                // const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
                 // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                if (['image', 'stylesheet', 'font', 'media'].includes(requestType)) {
-                    request.abort(); // Abort these requests to save time
-                    return; // Skip logging and proxying unnecessary requests
-                }
+                // if (['image', 'stylesheet', 'font', 'media'].includes(requestType)) {
+                //     request.abort(); // Abort these requests to save time
+                //     return; // Skip logging and proxying unnecessary requests
+                // }
 
                 // Log and proxy only essential requests (e.g., documents, AJAX, scripts)
                 if (proxy) {
