@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 
-function getSource({ url, proxy }) {
+function getSource({url, proxy}) {
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
 
@@ -10,7 +10,7 @@ function getSource({ url, proxy }) {
 
         let isResolved = false;
 
-        const { proxyRequest } = await import('puppeteer-proxy');
+        const {proxyRequest} = await import('puppeteer-proxy');
 
         const timeout = global.timeOut || 60000;
         const timeoutHandle = setTimeout(async () => {
@@ -25,17 +25,12 @@ function getSource({ url, proxy }) {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
             await page.setRequestInterception(true);
-
+            let isLogProxy = false
             // Proxy interception logic
             page.on('request', async (request) => {
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
-                if (['media'].includes(requestType)) {
-                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
-                    request.abort(); // Abort these requests to save time
-                    return; // Skip logging and proxying unnecessary requests
-                }
                 try {
-                    console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
+                    console.log(chalk.magenta(`Request intercepted type ${requestType}: ${request.url()}`));
                     if (proxy) {
                         console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
@@ -44,7 +39,10 @@ function getSource({ url, proxy }) {
                             request,
                         });
                     } else {
-                        console.log(chalk.cyan('Request not proxied, continuing...'));
+                        if (!isLogProxy) {
+                            console.log(chalk.cyan('Request not proxied, continuing...'));
+                            isLogProxy = true
+                        }
                         request.continue();
                     }
                 } catch (e) {
@@ -55,9 +53,9 @@ function getSource({ url, proxy }) {
             });
 
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, { waitUntil: 'networkidle2' });
+            await page.goto(url, {waitUntil: 'networkidle2'});
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Adjust idleTime and timeout as needed
+            await page.waitForNetworkIdle({idleTime: 1000, timeout: 30000}); // Adjust idleTime and timeout as needed
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
