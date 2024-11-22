@@ -2,7 +2,7 @@ const chalk = require("chalk");
 
 const abortType = ['media', "preflight", "websocket", 'font', 'stylesheet']
 
-function getSource({url, proxy, selector}) {
+function getSource({url, proxy, selector, waitFn}) {
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
 
@@ -70,6 +70,8 @@ function getSource({url, proxy, selector}) {
             console.log(chalk.green(`Waiting for network to be idle ${url}`));
             await page.waitForNetworkIdle({idleTime: 1000, timeout}); // Adjust idleTime and timeout as needed
             if (selector) await page.waitForSelector(selector, {timeout});
+            if (waitFn) await page.waitForFunction(waitFn, {timeout});
+
             console.log(chalk.green(`Extracting page content ${url}`));
             const html = await page.content();
             console.log(chalk.green(`Closing browser context ${url}`));
