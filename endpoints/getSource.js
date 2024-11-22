@@ -37,14 +37,14 @@ function getSource({url, proxy}) {
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
                 // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                // if (['image', 'stylesheet', 'font', 'media', 'other'].includes(requestType)) {
-                //     console.log(chalk.yellow(`Skipping request: ${request.url()}`));
-                //     request.abort(); // Abort these requests to save time
-                //     return; // Skip logging and proxying unnecessary requests
-                // }
+                if (['image', 'stylesheet', 'font'].includes(requestType)) {
+                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
+                    request.abort(); // Abort these requests to save time
+                    return; // Skip logging and proxying unnecessary requests
+                }
 
                 try {
-                    console.log(chalk.magenta(`Request intercepted ${chalk.green(requestType)}: ${chalk.blue(chalk.underline(request.url()))}`));
+                    console.log(chalk.magenta(`Request intercepted`, chalk.green(requestType)), ":", chalk.blue(chalk.underline(request.url())));
                     if (proxy) {
                         console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
