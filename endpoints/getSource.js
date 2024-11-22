@@ -1,29 +1,23 @@
-const chalk = require("chalk");
+const chalk = require('chalk');
 
-function getSource({url, proxy}) {
+function getSource({ url, proxy }) {
     return new Promise(async (resolve, reject) => {
-        if (!url) {
-            console.log(chalk.red('Missing url parameter'));
-            return reject('Missing url parameter');
-        }
+        if (!url) return reject('Missing url parameter');
 
         console.log(chalk.blue('Initializing browser context...'));
         const context = await global.browser.createBrowserContext().catch(() => null);
-        if (!context) {
-            console.log(chalk.red('Failed to create browser context'));
-            return reject('Failed to create browser context');
-        }
+        if (!context) return reject(chalk.red('Failed to create browser context'));
 
         let isResolved = false;
 
-        const {proxyRequest} = await import('puppeteer-proxy');
+        const { proxyRequest } = await import('puppeteer-proxy');
 
         const timeout = global.timeOut || 60000;
         const timeoutHandle = setTimeout(async () => {
             if (!isResolved) {
-                console.log(chalk.yellow('Timeout reached, closing context...'));
+                console.log(chalk.yellow('Request timeout reached, closing context...'));
                 await context.close();
-                reject("Timeout Error");
+                reject(chalk.red('Timeout Error'));
             }
         }, timeout);
 
@@ -34,17 +28,7 @@ function getSource({url, proxy}) {
 
             // Proxy interception logic
             page.on('request', async (request) => {
-                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
-
-                // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                if (['image', 'stylesheet', 'font'].includes(requestType)) {
-                    console.log(chalk.yellow(`Skipping request:`), chalk.blue(chalk.underline(request.url())));
-                    request.abort(); // Abort these requests to save time
-                    return; // Skip logging and proxying unnecessary requests
-                }
-
                 try {
-                    console.log(chalk.magenta(`Request intercepted`), chalk.green(requestType), ":", chalk.blue(chalk.underline(request.url())));
                     if (proxy) {
                         console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
@@ -53,25 +37,22 @@ function getSource({url, proxy}) {
                             request,
                         });
                     } else {
-                        console.log(chalk.green('Request not proxied, continuing...'));
+                        console.log(chalk.cyan('Request not proxied, continuing...'));
                         request.continue();
                     }
                 } catch (e) {
-                    console.log(chalk.red('Error with proxy request, aborting...'));
-                    console.error(chalk.red(e.message))
+                    console.log(chalk.red('Proxy request failed, aborting...'));
                     request.abort();
                 }
             });
 
-            // Handle navigation and waiting for network idle
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, {waitUntil: 'networkidle2'});
+            await page.goto(url, { waitUntil: 'networkidle2' });
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({idleTime: 1000, timeout: 30000});
+            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Adjust idleTime and timeout as needed
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
-
             console.log(chalk.green('Closing browser context...'));
             await context.close();
             isResolved = true;
@@ -79,7 +60,6 @@ function getSource({url, proxy}) {
             resolve(html);
 
         } catch (e) {
-            console.error(chalk.red(e.message))
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
                 await context.close();
