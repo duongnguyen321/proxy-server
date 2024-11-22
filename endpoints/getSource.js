@@ -1,6 +1,6 @@
 const chalk = require("chalk");
 
-function getSource({ url, proxy }) {
+function getSource({url, proxy}) {
     return new Promise(async (resolve, reject) => {
         if (!url) {
             console.log(chalk.red('Missing url parameter'));
@@ -16,7 +16,7 @@ function getSource({ url, proxy }) {
 
         let isResolved = false;
 
-        const { proxyRequest } = await import('puppeteer-proxy');
+        const {proxyRequest} = await import('puppeteer-proxy');
 
         const timeout = global.timeOut || 60000;
         const timeoutHandle = setTimeout(async () => {
@@ -58,15 +58,16 @@ function getSource({ url, proxy }) {
                     }
                 } catch (e) {
                     console.log(chalk.red('Error with proxy request, aborting...'));
+                    console.error(chalk.red(e.message))
                     request.abort();
                 }
             });
 
             // Handle navigation and waiting for network idle
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, { waitUntil: 'networkidle2' });
+            await page.goto(url, {waitUntil: 'networkidle2'});
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 });
+            await page.waitForNetworkIdle({idleTime: 1000, timeout: 30000});
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
@@ -78,6 +79,7 @@ function getSource({ url, proxy }) {
             resolve(html);
 
         } catch (e) {
+            console.error(chalk.red(e.message))
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
                 await context.close();
