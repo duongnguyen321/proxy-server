@@ -21,8 +21,6 @@ function getSource({ url, proxy }) {
             }
         }, timeout);
 
-        let logOnce = false; // Track if we've logged the first request
-
         try {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
@@ -30,47 +28,40 @@ function getSource({ url, proxy }) {
 
             // Proxy interception logic
             page.on('request', async (request) => {
-                try {
-                    const requestUrl = request.url();
-                    const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
-                    const requestMethod = request.method(); // e.g., 'GET', 'POST'
-                    const requestHeaders = JSON.stringify(request.headers(), null, 2); // request headers
+                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
-                    // Log request details
-                    console.log(chalk.magenta(`Request intercepted: ${requestUrl}`));
+                // Skip unnecessary resources like images, stylesheets, fonts, etc.
+                if (['image', 'stylesheet', 'font', 'media', 'other'].includes(requestType)) {
+                    request.abort(); // Abort these requests to save time
+                    return; // Skip logging and proxying unnecessary requests
+                }
+
+                // Log and proxy only essential requests (e.g., documents, AJAX, scripts)
+                if (proxy && (requestType === 'document' || requestType === 'xhr' || requestType === 'script')) {
+                    console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
                     console.log(chalk.magenta(`Type: ${requestType}`));
-                    console.log(chalk.magenta(`Method: ${requestMethod}`));
-                    console.log(chalk.magenta(`Headers: ${requestHeaders}`));
+                    console.log(chalk.magenta(`Method: ${request.method()}`));
 
-                    // Log only for the first time or if it's a non-image request
-                    if (proxy && (requestType !== 'image' || !logOnce)) {
-                        if (!logOnce) {
-                            console.log(chalk.cyan('Proxying request...'));
-                            logOnce = true;  // Log only once
-                        }
+                    try {
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
                             request,
                         });
-                    } else {
-                        // Only log once for non-proxied requests
-                        if (requestType !== 'image') {
-                            console.log(chalk.cyan(`Request not proxied, continuing...`));
-                        }
-                        request.continue();
+                    } catch (e) {
+                        console.log(chalk.red('Proxy request failed, aborting...'));
+                        request.abort();
                     }
-                } catch (e) {
-                    console.log(chalk.red('Proxy request failed, aborting...'));
-                    request.abort();
+                } else {
+                    // If it's not an essential request, just continue without logging
+                    request.continue();
                 }
             });
 
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, { waitUntil: 'domcontentloaded' });
-            // await page.goto(url, { waitUntil: 'networkidle2' });
-            // console.log(chalk.green('Waiting for network to be idle...'));
-            // await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Adjust idleTime and timeout as needed
+            await page.goto(url, { waitUntil: 'networkidle2' });
+            console.log(chalk.green('Waiting for network to be idle...'));
+            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Adjust idleTime and timeout as needed
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
