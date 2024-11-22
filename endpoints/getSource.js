@@ -21,6 +21,8 @@ function getSource({ url, proxy }) {
             }
         }, timeout);
 
+        let logOnce = false; // Track if we've logged the first request
+
         try {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
@@ -29,20 +31,37 @@ function getSource({ url, proxy }) {
             // Proxy interception logic
             page.on('request', async (request) => {
                 try {
-                    if (proxy) {
-                        console.log(chalk.cyan('Proxying request...'));
+                    const requestUrl = request.url();
+                    const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+                    const requestMethod = request.method(); // e.g., 'GET', 'POST'
+                    const requestHeaders = JSON.stringify(request.headers(), null, 2); // request headers
+
+                    // Log request details
+                    console.log(chalk.magenta(`Request intercepted: ${requestUrl}`));
+                    console.log(chalk.magenta(`Type: ${requestType}`));
+                    console.log(chalk.magenta(`Method: ${requestMethod}`));
+                    console.log(chalk.magenta(`Headers: ${requestHeaders}`));
+
+                    // Log only for the first time or if it's a non-image request
+                    if (proxy && (requestType !== 'image' || !logOnce)) {
+                        if (!logOnce) {
+                            console.log(chalk.cyan('Proxying request...'));
+                            logOnce = true;  // Log only once
+                        }
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
                             request,
                         });
                     } else {
-                        console.log(chalk.cyan('Request not proxied, continuing...'));
+                        // Only log once for non-proxied requests
+                        if (requestType !== 'image') {
+                            console.log(chalk.cyan(`Request not proxied, continuing...`));
+                        }
                         request.continue();
                     }
                 } catch (e) {
                     console.log(chalk.red('Proxy request failed, aborting...'));
-                    console.error(chalk.red(e.message))
                     request.abort();
                 }
             });
@@ -63,7 +82,6 @@ function getSource({ url, proxy }) {
         } catch (e) {
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
-                console.error(chalk.red(e.message))
                 await context.close();
                 clearTimeout(timeoutHandle);
                 reject(chalk.red(e.message));
