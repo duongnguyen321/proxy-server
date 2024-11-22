@@ -28,7 +28,14 @@ function getSource({ url, proxy }) {
 
             // Proxy interception logic
             page.on('request', async (request) => {
+                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+                if (['image', 'media', 'other'].includes(requestType)) {
+                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
+                    request.abort(); // Abort these requests to save time
+                    return; // Skip logging and proxying unnecessary requests
+                }
                 try {
+                    console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
                     if (proxy) {
                         console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
@@ -42,6 +49,7 @@ function getSource({ url, proxy }) {
                     }
                 } catch (e) {
                     console.log(chalk.red('Proxy request failed, aborting...'));
+                    console.log(chalk.red(e.message))
                     request.abort();
                 }
             });
@@ -60,6 +68,7 @@ function getSource({ url, proxy }) {
             resolve(html);
 
         } catch (e) {
+            console.log(chalk.red(e.message))
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
                 await context.close();
