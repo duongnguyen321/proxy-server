@@ -1,9 +1,9 @@
 const chalk = require("chalk");
 
 // In-memory cache to store static resources
-const cache = new Map();
 
 function getSource({url, proxy}) {
+    const cache = global.cache || new Map()
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
 
