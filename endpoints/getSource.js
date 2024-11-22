@@ -25,19 +25,22 @@ function getSource({url, proxy}) {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
             await page.setRequestInterception(true);
-
+            let isLogProxy = false
             // Proxy interception logic
             page.on('request', async (request) => {
                 try {
                     if (proxy) {
-                        console.log(chalk.cyan('Proxying request...'));
+                        console.log(chalk.cyan(`Proxying request: ${request.url()}`));
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
                             request,
                         });
                     } else {
-                        console.log(chalk.cyan('Request not proxied, continuing...'));
+                        if (!isLogProxy) {
+                            console.log(chalk.cyan('Request not proxied, continuing...'));
+                            isLogProxy = true
+                        }
                         request.continue();
                     }
                 } catch (e) {
