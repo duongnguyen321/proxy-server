@@ -39,8 +39,8 @@ function getSource({ url, proxy }) {
                 // Log and proxy only essential requests (e.g., documents, AJAX, scripts)
                 if (proxy && (requestType === 'document' || requestType === 'xhr' || requestType === 'script')) {
                     console.log(chalk.magenta(`Request intercepted: ${request.url()}`));
-                    console.log(chalk.magenta(`Type: ${requestType}`));
-                    console.log(chalk.magenta(`Method: ${request.method()}`));
+                    // console.log(chalk.magenta(`Type: ${requestType}`));
+                    // console.log(chalk.magenta(`Method: ${request.method()}`));
 
                     try {
                         await proxyRequest({
@@ -59,12 +59,16 @@ function getSource({ url, proxy }) {
             });
 
             console.log(chalk.green('Navigating to URL...'));
-            await page.goto(url, { waitUntil: 'networkidle2' });
+            await page.goto(url, { waitUntil: 'load' }); // Wait for the page to fully load
+
+            // Wait for any loading overlay to disappear (indicating page content is ready)
+
             console.log(chalk.green('Waiting for network to be idle...'));
-            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Adjust idleTime and timeout as needed
+            await page.waitForNetworkIdle({ idleTime: 1000, timeout: 30000 }); // Wait for all network activity to settle
 
             console.log(chalk.green('Extracting page content...'));
             const html = await page.content();
+
             console.log(chalk.green('Closing browser context...'));
             await context.close();
             isResolved = true;
