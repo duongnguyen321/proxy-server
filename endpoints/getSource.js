@@ -1,9 +1,14 @@
 const chalk = require("chalk");
 
-// In-memory cache to store static resources
+const abortType = ['media', 'font', 'stylesheet']
+const excludeArray = ['script', 'image']
+
 
 function getSource({url, proxy}) {
-    const cache = global.cache || new Map()
+    // Use global.cache to persist the cache across calls
+    global.cache = global.cache || new Map();
+    const cache = global.cache;
+
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
 
@@ -36,18 +41,25 @@ function getSource({url, proxy}) {
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
                 // Skip unnecessary resources
-                if (['media', 'font', 'stylesheet'].includes(requestType)) {
+                if (abortType.includes(requestType)) {
                     console.log(chalk.yellow(`Skipping request: ${requestUrl}`));
                     request.abort();
                     return;
                 }
 
                 // Serve from cache if available
+                console.log(chalk.blue(`Checking path ${requestUrl} in cache`))
                 if (cache.has(requestUrl)) {
-                    console.log(chalk.yellow(`Serving from cache: ${requestUrl}`));
+                    console.log(chalk.green(`Serving from cache: ${requestUrl}`));
                     const cachedResponse = cache.get(requestUrl);
-                    request.respond(cachedResponse); // Serve the cached response
+                    request.respond({
+                        status: cachedResponse.status,
+                        headers: cachedResponse.headers,
+                        body: cachedResponse.body,
+                    });
                     return;
+                } else {
+                    console.log(chalk.red(`Dont have path ${requestUrl} in cache`))
                 }
 
                 try {
@@ -66,8 +78,9 @@ function getSource({url, proxy}) {
                         request.continue();
                     }
 
-                    // Cache static resources like scripts and stylesheets
-                    if (['script', 'image'].includes(requestType)) {
+                    // Cache static resources like scripts and images
+                    if (excludeArray.includes(requestType)) {
+                        console.log(chalk.blue('Caching path: ', requestUrl))
                         const response = await request.response();
                         if (response) {
                             const buffer = await response.buffer();
