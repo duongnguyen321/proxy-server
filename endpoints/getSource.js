@@ -29,7 +29,7 @@ function getSource({ url, proxy }) {
             // Proxy interception logic
             page.on('request', async (request) => {
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
-                if (['image', 'media'].includes(requestType)) {
+                if (['media'].includes(requestType)) {
                     console.log(chalk.yellow(`Skipping request: ${request.url()}`));
                     request.abort(); // Abort these requests to save time
                     return; // Skip logging and proxying unnecessary requests
