@@ -30,7 +30,7 @@ function getSource({url, proxy}) {
             page.on('request', async (request) => {
                 try {
                     if (proxy) {
-                        console.log(chalk.cyan(`Proxying request: ${request.url()}`));
+                        // console.log(chalk.cyan(`Proxying request: ${request.url()}`));
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
