@@ -28,9 +28,18 @@ function getSource({url, proxy}) {
             let isLogProxy = false
             // Proxy interception logic
             page.on('request', async (request) => {
+                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+
+                // Skip unnecessary resources like images, stylesheets, fonts, etc.
+                if (['stylesheet', 'font', 'media'].includes(requestType)) {
+                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
+                    request.abort(); // Abort these requests to save time
+                    return; // Skip logging and proxying unnecessary requests
+                }
+
                 try {
+                    console.log(chalk.blue("Calling: ", chalk.underline(request.url())));
                     if (proxy) {
-                        // console.log(chalk.cyan(`Proxying request: ${request.url()}`));
                         await proxyRequest({
                             page,
                             proxyUrl: `http://${proxy.username ? `${proxy.username}:${proxy.password}@` : ""}${proxy.host}:${proxy.port}`,
@@ -38,7 +47,7 @@ function getSource({url, proxy}) {
                         });
                     } else {
                         if (!isLogProxy) {
-                            console.log(chalk.cyan('Request not proxied, continuing...'));
+                            console.log(chalk.red('Request not proxied, continuing...'));
                             isLogProxy = true
                         }
                         request.continue();
