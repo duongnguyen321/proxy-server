@@ -1,5 +1,8 @@
 const chalk = require("chalk");
 
+// In-memory cache to store static resources
+const cache = new Map();
+
 function getSource({url, proxy}) {
     return new Promise(async (resolve, reject) => {
         if (!url) return reject('Missing url parameter');
@@ -25,20 +28,30 @@ function getSource({url, proxy}) {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
             await page.setRequestInterception(true);
-            let isLogProxy = false
-            // Proxy interception logic
+            let isLogProxy = false;
+
+            // Proxy interception logic with caching
             page.on('request', async (request) => {
+                const requestUrl = request.url();
                 const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
-                // Skip unnecessary resources like images, stylesheets, fonts, etc.
-                if (['stylesheet', 'font', 'media'].includes(requestType)) {
-                    console.log(chalk.yellow(`Skipping request: ${request.url()}`));
-                    request.abort(); // Abort these requests to save time
-                    return; // Skip logging and proxying unnecessary requests
+                // Skip unnecessary resources
+                if (['media', 'font', 'stylesheet'].includes(requestType)) {
+                    console.log(chalk.yellow(`Skipping request: ${requestUrl}`));
+                    request.abort();
+                    return;
+                }
+
+                // Serve from cache if available
+                if (cache.has(requestUrl)) {
+                    console.log(chalk.yellow(`Serving from cache: ${requestUrl}`));
+                    const cachedResponse = cache.get(requestUrl);
+                    request.respond(cachedResponse); // Serve the cached response
+                    return;
                 }
 
                 try {
-                    console.log(chalk.blue("Calling: ", chalk.underline(request.url())));
+                    console.log(chalk.blue("Fetching: ", chalk.underline(requestUrl)));
                     if (proxy) {
                         await proxyRequest({
                             page,
@@ -48,14 +61,26 @@ function getSource({url, proxy}) {
                     } else {
                         if (!isLogProxy) {
                             console.log(chalk.red('Request not proxied, continuing...'));
-                            isLogProxy = true
+                            isLogProxy = true;
                         }
                         request.continue();
                     }
+
+                    // Cache static resources like scripts and stylesheets
+                    if (['script', 'image'].includes(requestType)) {
+                        const response = await request.response();
+                        if (response) {
+                            const buffer = await response.buffer();
+                            cache.set(requestUrl, {
+                                status: response.status(),
+                                headers: response.headers(),
+                                body: buffer,
+                            });
+                        }
+                    }
                 } catch (e) {
                     console.log(chalk.red('Proxy request failed, aborting...'));
-                    console.log(chalk.red(e.message))
-
+                    console.log(chalk.red(e.message));
                     request.abort();
                 }
             });
@@ -74,7 +99,7 @@ function getSource({url, proxy}) {
             resolve(html);
 
         } catch (e) {
-            console.log(chalk.red(e.message))
+            console.log(chalk.red(e.message));
 
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
