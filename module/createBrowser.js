@@ -1,4 +1,5 @@
 const { connect } = require("puppeteer-real-browser")
+const chalk = require("chalk");
 async function createBrowser() {
     try {
         if (global.finished == true) return
@@ -26,7 +27,7 @@ async function createBrowser() {
         })
 
     } catch (e) {
-        console.log(e.message);
+        console.log(chalk.red(e.message))
         if (global.finished == true) return
         await new Promise(resolve => setTimeout(resolve, 3000));
         await createBrowser();
