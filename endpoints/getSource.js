@@ -6,7 +6,6 @@ const excludeArray = ['script', 'image']
 
 function getSource({url, proxy}) {
     // Use global.cache to persist the cache across calls
-    global.cache = global.cache || new Map();
     const cache = global.cache;
 
     return new Promise(async (resolve, reject) => {
