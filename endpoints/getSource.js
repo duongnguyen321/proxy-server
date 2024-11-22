@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+const chalk = require("chalk");
 
 function getSource({url, proxy}) {
     return new Promise(async (resolve, reject) => {
@@ -25,12 +25,10 @@ function getSource({url, proxy}) {
             console.log(chalk.green('Creating new page...'));
             const page = await context.newPage();
             await page.setRequestInterception(true);
-            let isLogProxy = false
+
             // Proxy interception logic
             page.on('request', async (request) => {
-                const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
                 try {
-                    console.log(chalk.magenta(`Request intercepted type ${requestType}: ${request.url()}`));
                     if (proxy) {
                         console.log(chalk.cyan('Proxying request...'));
                         await proxyRequest({
@@ -39,15 +37,13 @@ function getSource({url, proxy}) {
                             request,
                         });
                     } else {
-                        if (!isLogProxy) {
-                            console.log(chalk.cyan('Request not proxied, continuing...'));
-                            isLogProxy = true
-                        }
+                        console.log(chalk.cyan('Request not proxied, continuing...'));
                         request.continue();
                     }
                 } catch (e) {
                     console.log(chalk.red('Proxy request failed, aborting...'));
                     console.log(chalk.red(e.message))
+
                     request.abort();
                 }
             });
@@ -67,6 +63,7 @@ function getSource({url, proxy}) {
 
         } catch (e) {
             console.log(chalk.red(e.message))
+
             if (!isResolved) {
                 console.log(chalk.red('An error occurred, closing context...'));
                 await context.close();
