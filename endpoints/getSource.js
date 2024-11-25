@@ -1,6 +1,7 @@
 const chalk = require("chalk");
 
-const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
+// const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
+const abortType = [];
 
 function getSource({ url, proxy, selector, waitFn }) {
   return new Promise(async (resolve, reject) => {
