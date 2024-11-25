@@ -44,7 +44,9 @@ function getSource({ url, proxy, selector, waitFn }) {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
         console.info(
-          chalk.blue(request.method),
+          chalk.blue(requestType),
+          " ",
+          chalk.blue(request.method()),
           " ",
           chalk.gray(request.url())
         );
