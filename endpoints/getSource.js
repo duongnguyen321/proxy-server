@@ -79,6 +79,7 @@ function getSource({ url, proxy, selector, waitFn }) {
 
             // Optionally, get the response body if needed
             try {
+              const response = request.request()
               const body = await response.text();
               console.log(chalk.yellow("Response Body:"), body);
             } catch (err) {
