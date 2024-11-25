@@ -46,7 +46,7 @@ function getSource({ url, proxy }) {
             page.on('response', async (res) => {
                 try {
                     if ([200, 302].includes(res.status()) && [url, url + '/'].includes(res.url())) {
-                        await page.waitForNavigation({ waitUntil: 'load', timeout: 5000 }).catch(() => { });
+                        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 5000 }).catch(() => { });
                         const cookies = await page.cookies()
                         let headers = await res.request().headers()
                         delete headers['content-type']
@@ -64,7 +64,7 @@ function getSource({ url, proxy }) {
 
 
             await page.goto(url, {
-                waitUntil: 'domcontentloaded'
+                waitUntil: 'networkidle2'
             })
         } catch (e) {
             if (!isResolved) {

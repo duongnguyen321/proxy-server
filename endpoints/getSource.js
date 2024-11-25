@@ -22,15 +22,6 @@ function getSource({ url, proxy, selector, waitFn }) {
     const { proxyRequest } = await import("puppeteer-proxy");
 
     const timeout = global.timeOut || 60000;
-    const timeoutHandle = setTimeout(async () => {
-      if (!isResolved) {
-        console.log(
-          chalk.yellow(`Request timeout reached, closing context ${url}`)
-        );
-        await context.close();
-        reject(chalk.red(`Timeout Error ${url}`));
-      }
-    }, timeout);
 
     try {
       console.log(chalk.green(`Creating new page ${url}`));
