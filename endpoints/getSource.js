@@ -1,3 +1,4 @@
+const fs = require("fs");
 const chalk = require("chalk");
 const puppeteerHar = require("puppeteer-har");
 // const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
@@ -90,7 +91,12 @@ function getSource({ url, proxy, selector, waitFn }) {
         await page.waitForFunction(waitFn, { timeout });
       }
       console.log(chalk.green(`Extracting page content ${url}`));
-      await har.stop();
+      fs.writeFileSync(
+        "network-log.har",
+        JSON.stringify(await har.stop(), null, 2),
+        "utf-8"
+      );
+      console.log(chalk.green("HAR file saved as network-log.har"));
       const html = await page.content();
       console.log(chalk.green(`Closing browser context ${url}`));
       await context.close();
