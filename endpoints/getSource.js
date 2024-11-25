@@ -1,7 +1,7 @@
 const chalk = require("chalk");
 const puppeteerHar = require("puppeteer-har");
 // const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
-const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
+const abortType = ["media", "font", "stylesheet"];
 
 function getSource({ url, proxy, selector, waitFn }) {
   return new Promise(async (resolve, reject) => {
@@ -23,55 +23,32 @@ function getSource({ url, proxy, selector, waitFn }) {
     const { proxyRequest } = await import("puppeteer-proxy");
 
     const timeout = global.timeOut || 60000;
-    // const timeoutHandle = setTimeout(async () => {
-    //   if (!isResolved) {
-    //     console.log(
-    //       chalk.yellow(`Request timeout reached, closing context ${url}`)
-    //     );
-    //     await context.close();
-    //     reject(chalk.red(`Timeout Error ${url}`));
-    //   }
-    // }, timeout);
-
     try {
       console.log(chalk.green(`Creating new page ${url}`));
       const page = await context.newPage();
       await page.setRequestInterception(true);
       let isLogProxy = false;
 
-
       // Proxy interception logic with caching
       page.on("request", async (request) => {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
         const url = request.url();
-
-        console.info(
-          chalk.blue(requestType),
-          " ",
-          chalk.blue(request.method()),
-          " ",
-          chalk.gray(request.url())
-        );
         // Skip unnecessary resources
         if (abortType.includes(requestType)) {
           console.warn(
-            "ABORTING... ",
+            chalk.red("ABORTING... "),
             chalk.yellow(requestType),
-            " ",
             chalk.yellow(request.method()),
-            " ",
             chalk.yellow(request.url())
           );
           return request.abort();
         }
         try {
           console.log(
-            "ACCEPT... ",
-            chalk.green(requestType),
-            " ",
-            chalk.green(request.method()),
-            " ",
-            chalk.green(request.url())
+            chalk.green("ACCEPT... "),
+            chalk.yellow(requestType),
+            chalk.yellow(request.method()),
+            chalk.yellow(request.url())
           );
 
           if (proxy) {
@@ -118,7 +95,6 @@ function getSource({ url, proxy, selector, waitFn }) {
       console.log(chalk.green(`Closing browser context ${url}`));
       await context.close();
       isResolved = true;
-      // clearTimeout(timeoutHandle);
       resolve(html);
     } catch (e) {
       console.log(chalk.red(e.message, url));
@@ -126,7 +102,6 @@ function getSource({ url, proxy, selector, waitFn }) {
       if (!isResolved) {
         console.log(chalk.red(`An error occurred, closing context ${url}`));
         await context.close();
-        // clearTimeout(timeoutHandle);
         reject(chalk.red(e.message, url));
       }
     }
