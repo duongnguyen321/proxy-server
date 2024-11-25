@@ -48,6 +48,11 @@ function getSource({ url, proxy, selector, waitFn }) {
           return request.abort();
         }
         try {
+          console.info(
+            chalk.blue(request.method),
+            " ",
+            chalk.gray(request.url())
+          );
           if (proxy) {
             await proxyRequest({
               page,
