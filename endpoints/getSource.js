@@ -52,9 +52,25 @@ function getSource({ url, proxy, selector, waitFn }) {
         );
         // Skip unnecessary resources
         if (abortType.includes(requestType)) {
+          console.warn(
+            "ABORTING... ",
+            chalk.yellow(requestType),
+            " ",
+            chalk.yellow(request.method()),
+            " ",
+            chalk.yellow(request.url())
+          );
           return request.abort();
         }
         try {
+          console.log(
+            "ACCEPT... ",
+            chalk.green(requestType),
+            " ",
+            chalk.green(request.method()),
+            " ",
+            chalk.green(request.url())
+          );
           if (proxy) {
             await proxyRequest({
               page,
