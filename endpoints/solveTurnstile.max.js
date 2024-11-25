@@ -51,7 +51,7 @@ function solveTurnstileMin({ url, proxy }) {
                 }
             )
             await page.goto(url, {
-                waitUntil: 'networkidle2'
+                waitUntil: 'networkidle0'
             })
 
             await page.waitForSelector('[name="cf-response"]', {
