@@ -37,6 +37,10 @@ function getSource({ url, proxy, selector, waitFn }) {
       console.log(chalk.green(`Creating new page ${url}`));
       const page = await context.newPage();
       await page.setRequestInterception(true);
+
+      console.log(chalk.green(`Navigating to URL ${url}`));
+      await page.goto(url, { waitUntil: "networkidle2", timeout });
+
       let isLogProxy = false;
 
       // Proxy interception logic with caching
@@ -95,8 +99,6 @@ function getSource({ url, proxy, selector, waitFn }) {
         }
       });
 
-      console.log(chalk.green(`Navigating to URL ${url}`));
-      await page.goto(url, { waitUntil: "networkidle2", timeout });
       console.log(chalk.green(`Waiting for network to be idle ${url}`));
       await page.waitForNetworkIdle({ idleTime: 1000, timeout }); // Adjust idleTime and timeout as needed
       if (selector) {
