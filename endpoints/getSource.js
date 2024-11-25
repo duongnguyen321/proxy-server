@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-
+const puppeteerHar = require("puppeteer-har");
 // const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
 const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
 
@@ -39,6 +39,7 @@ function getSource({ url, proxy, selector, waitFn }) {
       await page.setRequestInterception(true);
       let isLogProxy = false;
 
+
       // Proxy interception logic with caching
       page.on("request", async (request) => {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
@@ -73,22 +74,6 @@ function getSource({ url, proxy, selector, waitFn }) {
             chalk.green(request.url())
           );
 
-          // Log only XHR or Fetch requests
-          if (requestType === "xhr" || requestType === "fetch") {
-            console.log(chalk.green("Captured Data Request:"), chalk.blue(url));
-
-            // Optionally, get the response body if needed
-            try {
-              const body = await request.text();
-              console.log(chalk.yellow("Response Body:"), body);
-            } catch (err) {
-              console.log(
-                chalk.red("Error reading response body"),
-                err.message
-              );
-            }
-          }
-
           if (proxy) {
             await proxyRequest({
               page,
@@ -113,6 +98,8 @@ function getSource({ url, proxy, selector, waitFn }) {
         }
       });
 
+      const har = new puppeteerHar(page);
+      await har.start();
       console.log(chalk.green(`Navigating to URL ${url}`));
       await page.goto(url, { waitUntil: "networkidle2", timeout });
       console.log(chalk.green(`Waiting for network to be idle ${url}`));
@@ -126,6 +113,7 @@ function getSource({ url, proxy, selector, waitFn }) {
         await page.waitForFunction(waitFn, { timeout });
       }
       console.log(chalk.green(`Extracting page content ${url}`));
+      await har.stop();
       const html = await page.content();
       console.log(chalk.green(`Closing browser context ${url}`));
       await context.close();
