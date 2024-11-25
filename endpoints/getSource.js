@@ -37,15 +37,13 @@ function getSource({ url, proxy, selector, waitFn }) {
       console.log(chalk.green(`Creating new page ${url}`));
       const page = await context.newPage();
       await page.setRequestInterception(true);
-
-      console.log(chalk.green(`Navigating to URL ${url}`));
-      await page.goto(url, { waitUntil: "networkidle2", timeout });
-
       let isLogProxy = false;
 
       // Proxy interception logic with caching
       page.on("request", async (request) => {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
+        const request = response.request();
+        const url = request.url();
 
         console.info(
           chalk.blue(requestType),
@@ -75,6 +73,23 @@ function getSource({ url, proxy, selector, waitFn }) {
             " ",
             chalk.green(request.url())
           );
+
+          // Log only XHR or Fetch requests
+          if (requestType === "xhr" || requestType === "fetch") {
+            console.log(chalk.green("Captured Data Request:"), chalk.blue(url));
+
+            // Optionally, get the response body if needed
+            try {
+              const body = await response.text();
+              console.log(chalk.yellow("Response Body:"), body);
+            } catch (err) {
+              console.log(
+                chalk.red("Error reading response body"),
+                err.message
+              );
+            }
+          }
+
           if (proxy) {
             await proxyRequest({
               page,
@@ -99,6 +114,8 @@ function getSource({ url, proxy, selector, waitFn }) {
         }
       });
 
+      console.log(chalk.green(`Navigating to URL ${url}`));
+      await page.goto(url, { waitUntil: "networkidle2", timeout });
       console.log(chalk.green(`Waiting for network to be idle ${url}`));
       await page.waitForNetworkIdle({ idleTime: 1000, timeout }); // Adjust idleTime and timeout as needed
       if (selector) {
