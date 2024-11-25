@@ -11,6 +11,12 @@ const schema = {
             "type": "string",
             "enum": ["source", "turnstile-min", "turnstile-max", "waf-session"],
         },
+        "selector": {
+            "type": "string",
+        },
+        "waitFn": {
+            "type": "string",
+        },
         "proxy": {
             "type": "object",
             "properties": {
