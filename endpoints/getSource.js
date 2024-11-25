@@ -1,7 +1,7 @@
 const chalk = require("chalk");
 
 // const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
-const abortType = ["media", "font", "stylesheet"];
+const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
 
 function getSource({ url, proxy, selector, waitFn }) {
   return new Promise(async (resolve, reject) => {
@@ -73,7 +73,7 @@ function getSource({ url, proxy, selector, waitFn }) {
       });
 
       console.log(chalk.green(`Navigating to URL ${url}`));
-      await page.goto(url, { waitUntil: "networkidle0", timeout });
+      await page.goto(url, { waitUntil: "networkidle2", timeout });
       console.log(chalk.green(`Waiting for network to be idle ${url}`));
       await page.waitForNetworkIdle({ idleTime: 1000, timeout }); // Adjust idleTime and timeout as needed
       if (selector) {
