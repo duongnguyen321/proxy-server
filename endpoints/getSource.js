@@ -22,6 +22,15 @@ function getSource({ url, proxy, selector, waitFn }) {
     const { proxyRequest } = await import("puppeteer-proxy");
 
     const timeout = global.timeOut || 60000;
+    // const timeoutHandle = setTimeout(async () => {
+    //   if (!isResolved) {
+    //     console.log(
+    //       chalk.yellow(`Request timeout reached, closing context ${url}`)
+    //     );
+    //     await context.close();
+    //     reject(chalk.red(`Timeout Error ${url}`));
+    //   }
+    // }, timeout);
 
     try {
       console.log(chalk.green(`Creating new page ${url}`));
@@ -79,7 +88,7 @@ function getSource({ url, proxy, selector, waitFn }) {
       console.log(chalk.green(`Closing browser context ${url}`));
       await context.close();
       isResolved = true;
-      clearTimeout(timeoutHandle);
+      // clearTimeout(timeoutHandle);
       resolve(html);
     } catch (e) {
       console.log(chalk.red(e.message, url));
@@ -87,7 +96,7 @@ function getSource({ url, proxy, selector, waitFn }) {
       if (!isResolved) {
         console.log(chalk.red(`An error occurred, closing context ${url}`));
         await context.close();
-        clearTimeout(timeoutHandle);
+        // clearTimeout(timeoutHandle);
         reject(chalk.red(e.message, url));
       }
     }
