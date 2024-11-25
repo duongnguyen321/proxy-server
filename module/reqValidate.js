@@ -11,6 +11,9 @@ const schema = {
             "type": "string",
             "enum": ["source", "turnstile-min", "turnstile-max", "waf-session"],
         },
+        "abortType": {
+            "type": "array",
+        },
         "selector": {
             "type": "string",
         },

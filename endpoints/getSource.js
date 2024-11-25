@@ -1,10 +1,7 @@
-const fs = require("fs");
 const chalk = require("chalk");
-const puppeteerHar = require("puppeteer-har");
-// const abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
-const abortType = ["media", "font", "stylesheet"];
+const _abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
 
-function getSource({ url, proxy, selector, waitFn }) {
+function getSource({ url, proxy, selector, waitFn, abortType = _abortType }) {
   return new Promise(async (resolve, reject) => {
     if (!url) return reject("Missing url parameter");
 
@@ -75,9 +72,6 @@ function getSource({ url, proxy, selector, waitFn }) {
           request.abort();
         }
       });
-
-      const har = new puppeteerHar(page);
-      await har.start();
       console.log(chalk.green(`Navigating to URL ${url}`));
       await page.goto(url, { waitUntil: "networkidle2", timeout });
       console.log(chalk.green(`Waiting for network to be idle ${url}`));
@@ -91,12 +85,6 @@ function getSource({ url, proxy, selector, waitFn }) {
         await page.waitForFunction(waitFn, { timeout });
       }
       console.log(chalk.green(`Extracting page content ${url}`));
-      fs.writeFileSync(
-        "network-log.har",
-        JSON.stringify(await har.stop(), null, 2),
-        "utf-8"
-      );
-      console.log(chalk.green("HAR file saved as network-log.har"));
       const html = await page.content();
       console.log(chalk.green(`Closing browser context ${url}`));
       await context.close();
