@@ -43,16 +43,16 @@ function getSource({ url, proxy, selector, waitFn }) {
       page.on("request", async (request) => {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
 
+        console.info(
+          chalk.blue(request.method),
+          " ",
+          chalk.gray(request.url())
+        );
         // Skip unnecessary resources
         if (abortType.includes(requestType)) {
           return request.abort();
         }
         try {
-          console.info(
-            chalk.blue(request.method),
-            " ",
-            chalk.gray(request.url())
-          );
           if (proxy) {
             await proxyRequest({
               page,
