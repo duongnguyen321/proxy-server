@@ -42,7 +42,6 @@ function getSource({ url, proxy, selector, waitFn }) {
       // Proxy interception logic with caching
       page.on("request", async (request) => {
         const requestType = request.resourceType(); // e.g., 'document', 'script', 'image'
-        const request = response.request();
         const url = request.url();
 
         console.info(
