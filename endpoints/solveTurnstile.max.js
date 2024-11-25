@@ -11,13 +11,6 @@ function solveTurnstileMin({ url, proxy }) {
         const { proxyRequest } = await import('puppeteer-proxy')
         const { RequestInterceptionManager } = await import('puppeteer-intercept-and-modify-requests')
 
-        var cl = setTimeout(async () => {
-            if (!isResolved) {
-                await context.close()
-                reject("Timeout Error")
-            }
-        }, (global.timeOut || 60000))
-
         try {
             const page = await context.newPage();
 
@@ -65,14 +58,12 @@ function solveTurnstileMin({ url, proxy }) {
                 }
             })
             isResolved = true
-            clearInterval(cl)
             await context.close()
             if (!token || token.length < 10) return reject('Failed to get token')
             return resolve(token)
         } catch (e) {
             if (!isResolved) {
                 await context.close()
-                clearInterval(cl)
                 reject(e.message)
             }
         }

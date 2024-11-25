@@ -1,7 +1,14 @@
 const chalk = require("chalk");
-const _abortType = ["media", "preflight", "websocket", "font", "stylesheet"];
+const _abortType = ["media", "font", "stylesheet"];
 
-function getSource({ url, proxy, selector, waitFn, abortType = _abortType }) {
+function getSource({
+  url,
+  proxy,
+  selector,
+  waitFn,
+  abortType = _abortType,
+  waitNetwork = true,
+}) {
   return new Promise(async (resolve, reject) => {
     if (!url) return reject("Missing url parameter");
 
@@ -20,7 +27,7 @@ function getSource({ url, proxy, selector, waitFn, abortType = _abortType }) {
 
     const { proxyRequest } = await import("puppeteer-proxy");
 
-    const timeout = global.timeOut || 60000;
+    const timeout = global.timeOut || 120000;
     try {
       console.log(chalk.green(`Creating new page ${url}`));
       const page = await context.newPage();
@@ -74,8 +81,10 @@ function getSource({ url, proxy, selector, waitFn, abortType = _abortType }) {
       });
       console.log(chalk.green(`Navigating to URL ${url}`));
       await page.goto(url, { waitUntil: "networkidle2", timeout });
-      console.log(chalk.green(`Waiting for network to be idle ${url}`));
-      await page.waitForNetworkIdle({ idleTime: 1000, timeout }); // Adjust idleTime and timeout as needed
+      if (waitNetwork) {
+        console.log(chalk.green(`Waiting for network to be idle ${url}`));
+        await page.waitForNetworkIdle({ idleTime: 1000, timeout }); // Adjust idleTime and timeout as needed
+      }
       if (selector) {
         console.log(chalk.green(`Waiting for element ${selector} ${url}`));
         await page.waitForSelector(selector, { timeout });

@@ -20,13 +20,6 @@ function getSource({ url, proxy }) {
 
         const { proxyRequest } = await import('puppeteer-proxy')
 
-        var cl = setTimeout(async () => {
-            if (!isResolved) {
-                await context.close()
-                reject("Timeout Error")
-            }
-        }, (global.timeOut || 60000))
-
         try {
             const page = await context.newPage();
             await page.setRequestInterception(true);
@@ -56,7 +49,6 @@ function getSource({ url, proxy }) {
                         headers["accept-language"] = await findAcceptLanguage(page)
                         await context.close()
                         isResolved = true
-                        clearInterval(cl)
                         resolve({ cookies, headers })
                     }
                 } catch (e) { }
@@ -69,7 +61,6 @@ function getSource({ url, proxy }) {
         } catch (e) {
             if (!isResolved) {
                 await context.close()
-                clearInterval(cl)
                 reject(e.message)
             }
         }
